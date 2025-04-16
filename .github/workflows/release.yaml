@@ -15,11 +15,11 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: "3.11.4"
+          python-version: "3.11.9"
 
       - name: Download embeddable Python
         run: |
-          $url = "https://www.python.org/ftp/python/3.11.4/python-3.11.4-embed-amd64.zip"
+          $url = "https://www.python.org/ftp/python/3.11.9/python-3.11.9-embed-amd64.zip"
           $output = "$env:TEMP/python-embed.zip"
           Invoke-WebRequest -Uri $url -OutFile $output
           Expand-Archive -Path $output -DestinationPath ./python -Force
@@ -31,6 +31,7 @@ jobs:
           $pythonPath = (Get-Command python | Select-Object -First 1).Source
           $packagePath = "$pythonPath/../Lib/site-packages"
           Copy-Item -Path $packagePath -Destination ./python/site-packages -Recurse
+          Add-Content -Path python/python311._pth -Value "`nsite-packages"
 
       - name: Compress files
         run: |
