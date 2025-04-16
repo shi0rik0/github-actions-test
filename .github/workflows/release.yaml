@@ -1,0 +1,43 @@
+name: Release
+
+on: push
+
+jobs:
+  build:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.11.4"
+
+      - name: Download embeddable Python
+        run: |
+          $url = "https://www.python.org/ftp/python/3.11.4/python-3.11.4-embed-amd64.zip"
+          $output = "$env:TEMP/python-embed.zip"
+          Invoke-WebRequest -Uri $url -OutFile $output
+          Expand-Archive -Path $output -DestinationPath ./python -Force
+          Remove-Item $output
+
+      - name: Install dependencies
+        run: |
+          pip install numpy
+          $pythonPath = (Get-Command python | Select-Object -First 1).Source
+          $packagePath = "$pythonPath/../Lib/site-packages"
+          Copy-Item -Path $packagePath -Destination ./python/site-packages -Recurse
+
+      - name: Compress files
+        run: |
+          Compress-Archive -Path . -DestinationPath ${{ github.ref_name }}.zip -CompressionLevel Optimal
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ${{ github.ref_name }}.zip
